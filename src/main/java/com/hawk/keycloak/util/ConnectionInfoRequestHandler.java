@@ -16,7 +16,7 @@ public class ConnectionInfoRequestHandler {
 
         return new ConnectionInfo(
                 Version.VERSION,
-                "1.0.0",
+                VersionInfo.getPackageVersion(),
                 session.getContext().getClient().getClientId(),
                 session.getContext().getClient().getId()
         );

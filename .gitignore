@@ -10,5 +10,3 @@
 
 .maven/*
 target/*
-!target/hawk-auth-server-extension.jar
-!target/hawk-auth-server-extension-sources.jar

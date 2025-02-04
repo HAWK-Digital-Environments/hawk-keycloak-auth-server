@@ -1,0 +1,14 @@
+# IDEA Code Style
+.idea/*
+!.idea/copyright/
+!.idea/copyright/*
+!.idea/codeStyles/
+!.idea/codeStyles/*
+
+# Env files
+.env
+
+.maven/*
+target/*
+!target/hawk-auth-server-extension.jar
+!target/hawk-auth-server-extension-sources.jar

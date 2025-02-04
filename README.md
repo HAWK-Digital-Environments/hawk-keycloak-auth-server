@@ -245,9 +245,11 @@ It will generate the `target/cache-buster-extension.jar` file.
 ##  Postcardware
 You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
 
+```
 HAWK Fakultät Gestaltung
 Interaction Design Lab
 Renatastraße 11
 31134 Hildesheim
+```
 
 Thank you :D

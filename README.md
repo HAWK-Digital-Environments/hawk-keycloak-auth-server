@@ -9,9 +9,9 @@ data of the realm changes.
 
 ## Installation
 
-To install the extension you may copy the `target/cache-buster-extension.jar` and place it in the `standalone/deployments` folder of your keycloak server.
+To install the extension download the latest release from the [releases page](https://github.com/HAWK-Digital-Environments/hawk-keycloak-auth-server/releases).
 
-### Configure access
+### Configure
 
 After the installation of the extension you need to restart the keycloak server.
 With the restart the extension will create a bunch of new roles you need to assign to your clients.
@@ -22,6 +22,8 @@ This will give your client read-only access to the new endpoints.
 
 If you want to do management operations (like updating the profile structure or managing resource permissions),
 you need to assign the corresponding roles to your client: `hawk-manage-profile-structure`, `hawk-manage-profile-data`, `hawk-manage-resource-permissions`.
+
+As a last step, open your "Realm settings" you want to use the client with go to "Events" and add the "hawk-cache-buster" event listener.
 
 ## What's in the box?
 

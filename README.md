@@ -69,7 +69,15 @@ Returns a list of authorization resource definitions for the client requesting t
 that can be used to filter resources based on their ids.
 
 Supported query parameters:
-* **ids** - A list of resource ids to search for, in the format `id1,id2`. If provided, the search and attributes parameters CAN NOT be used.
+* **ids** - A list of resource ids to search for, in the format `id1,id2`. If provided the filters "name", "owner", "type" and "uri" can not be used. (Exception owner + sharedOnly, this is allowed)
+* **name** - Allows for filtering the resources by their name, by default a partial search is done, set 'exactName' for exact matching
+* **uri** - Allows filtering the resources by the uri
+* **owner** - The uuid of a user will only return resources owned by the user
+* **sharedWith** - Allows filtering the resources to all resources shared with the user with the given uuid
+* **sharedOnly** - If true, only resources shared with the user will be returned. Enabling this flag MUST be accompanied by the "owner" filter, that is the user id which shared the resources.
+* **idsOnly** - If set, only the ids of the resources are returned
+* **exactName** - If set only resources that match the name-filter exactly will be returned
+* **type** - Allows for filtering for types of resources
 * **first** - The first result to return (0-based)
 * **max** - The maximum number of results to return (default 100)
 
@@ -99,30 +107,6 @@ Expected body:
   "scopes": ["scope1", "scope2"]
 }
 ```
-
-#### GET Resources shared with User
-`/realms/{realm}/hawk/resources/shared-with/{userId}`
-
-Returns a list of resource ids that have been shared with the specified user. (Shared means, the resources
-have been specifically allowed to the user by a UMA ticket or using the "Allow Resource to User" endpoint).
-
-Supported query parameters:
-* **first** - The first result to return (0-based)
-* **max** - The maximum number of results to return (default 100)
-
-Required roles: `hawk-view-resource-permissions` or `hawk-manage-resource-permissions` or both.
-
-#### GET Resources shared by User
-`/realms/{realm}/hawk/resources/shared-by/{userId}`
-
-Returns a list of resource ids that have been shared by the specified user. (Shared means, the resources
-have been specifically allowed to the user by a UMA ticket or using the "Allow Resource to User" endpoint).
-
-Supported query parameters:
-* **first** - The first result to return (0-based)
-* **max** - The maximum number of results to return (default 100)
-
-Required roles: `hawk-view-resource-permissions` or `hawk-manage-resource-permissions` or both.
 
 #### GET Roles
 `/realms/{realm}/hawk/roles`

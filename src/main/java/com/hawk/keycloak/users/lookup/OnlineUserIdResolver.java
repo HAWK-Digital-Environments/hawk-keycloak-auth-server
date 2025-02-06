@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserSessionProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,7 @@ import static com.hawk.keycloak.users.model.ClientIdSessionType.SessionType.REGU
 
 @RequiredArgsConstructor
 public class OnlineUserIdResolver {
-
-    final private KeycloakSession session;
+    final private UserSessionProvider sessionProvider;
     final private RealmModel realm;
 
     /**
@@ -31,9 +31,10 @@ public class OnlineUserIdResolver {
             String[] userIdFilter
     ) {
 
-        final Map<String, Long> clientSessionStats = session.sessions().getActiveClientSessionStats(realm, false);
+        final Map<String, Long> clientSessionStats = sessionProvider.getActiveClientSessionStats(realm, false);
         Stream<ClientIdSessionType> sessionIdStream = clientSessionStats.keySet().stream()
                 .map(i -> new ClientIdSessionType(i, REGULAR));
+
         // 10 minutes
         final int CONSIDER_OFFLINE_AFTER = 600;
         final int considerOfflineThreshold = (int) System.currentTimeMillis() - (CONSIDER_OFFLINE_AFTER * 1000);
@@ -44,7 +45,7 @@ public class OnlineUserIdResolver {
                 // client has been removed in the meantime
                 return Stream.empty();
             }
-            return session.sessions().getUserSessionsStream(realm, clientModel)
+            return sessionProvider.getUserSessionsStream(realm, clientModel)
                     // Only include sessions that have been accessed in the last CONSIDER_OFFLINE_AFTER minutes
                     .filter(s -> s.getLastSessionRefresh() > considerOfflineThreshold)
                     .map(s -> s.getUser().getId());

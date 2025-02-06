@@ -10,6 +10,7 @@ import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.ScopeStore;
 import org.keycloak.events.admin.OperationType;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakUriInfo;
 import org.keycloak.models.UserModel;
 import org.keycloak.services.resources.admin.AdminEventBuilder;
 
@@ -20,8 +21,8 @@ public class ResourcePermissionSetter {
     private final PermissionTicketStore ticketStore;
     private final ResourceServer resourceServer;
     private final ScopeStore scopeStore;
-    private final KeycloakSession session;
     private final AdminEventBuilder adminEvent;
+    private final KeycloakUriInfo uri;
 
     public void setPermissions(
             UserModel user,
@@ -97,7 +98,7 @@ public class ResourcePermissionSetter {
 
         if(triggerEvent){
             adminEvent.operation(OperationType.UPDATE)
-                    .resourcePath(session.getContext().getUri())
+                    .resourcePath(uri)
                     .representation(Map.of("userId", user.getId(), "resourceId", resource.getId(), "scopes", scopes))
                     .success();
         }

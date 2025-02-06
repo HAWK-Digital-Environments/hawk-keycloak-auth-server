@@ -1,10 +1,10 @@
 package com.hawk.keycloak.roles;
 
 import com.hawk.keycloak.auth.HawkPermissionEvaluator;
+import com.hawk.keycloak.util.ResultWindow;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
@@ -31,21 +31,19 @@ public class RolesRequestHandler {
             Integer firstResult,
             Integer maxResults
     ) {
-        firstResult = firstResult != null ? firstResult : 0;
-        maxResults = maxResults != null ? maxResults : Constants.DEFAULT_MAX_RESULTS;
-
         auth.requireViewRoles();
 
         RealmModel realm = session.getContext().getRealm();
 
-        return Stream.concat(
-                        session.roles().getRealmRolesStream(realm, firstResult, maxResults),
-                        session.getContext().getClient().getRolesStream(firstResult, maxResults)
-                ).filter(r -> !IGNORED_ROLES.contains(r.getName()) && !r.getName().startsWith("default-roles-"))
-                .distinct()
-                .skip(firstResult)
-                .limit(maxResults)
-                .map(ModelToRepresentation::toRepresentation);
+        return ResultWindow.limitStream(
+                Stream.concat(
+                                session.roles().getRealmRolesStream(realm, firstResult, maxResults),
+                                session.getContext().getClient().getRolesStream(firstResult, maxResults)
+                        ).filter(r -> !IGNORED_ROLES.contains(r.getName()) && !r.getName().startsWith("default-roles-"))
+                        .distinct(),
+                firstResult,
+                maxResults
+        ).map(ModelToRepresentation::toRepresentation);
 
     }
 
@@ -64,9 +62,9 @@ public class RolesRequestHandler {
             throw new NotFoundException("Could not find role with id");
         }
 
-        if(roleModel.isClientRole()){
+        if (roleModel.isClientRole()) {
             RoleModel clientRoleModel = session.getContext().getClient().getRole(roleModel.getName());
-            if(clientRoleModel == null || !Objects.equals(clientRoleModel.getId(), roleModel.getId())){
+            if (clientRoleModel == null || !Objects.equals(clientRoleModel.getId(), roleModel.getId())) {
                 throw new ForbiddenException("Requested members of a role outside the scope");
             }
         }

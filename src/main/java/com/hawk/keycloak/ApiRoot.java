@@ -17,7 +17,6 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 import org.keycloak.representations.userprofile.config.UPConfig;
 import org.keycloak.services.resources.admin.AdminAuth;
 
@@ -39,7 +38,7 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
     @Path("users")
     @Produces(MediaType.APPLICATION_JSON)
     @NoCache
-    public Stream<Map<String, Object>> getUsers(
+    public Response getUsers(
             @Parameter(description = "A String contained in username, first or last name, or email. Default search behavior is prefix-based (e.g., foo or foo*). Use *foo* for infix search and \"foo\" for exact search.") @QueryParam("search") String search,
             @Parameter(description = "A query to search for custom attributes, in the format 'key1:value2 key2:value2'") @QueryParam("attributes") String attributes,
             @Parameter(description = "List of comma separated user ids, in the format 'id1,id2'") @QueryParam("ids") String ids,
@@ -65,27 +64,33 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
     @Path("users/count")
     @Produces(MediaType.TEXT_PLAIN)
     @NoCache
-    public String getUsersCount(
+    public Response getUsersCount(
             @Parameter(description = "A String contained in username, first or last name, or email. Default search behavior is prefix-based (e.g., foo or foo*). Use *foo* for infix search and \"foo\" for exact search.") @QueryParam("search") String search,
             @Parameter(description = "A query to search for custom attributes, in the format 'key1:value2 key2:value2'") @QueryParam("attributes") String attributes,
             @Parameter(description = "If true, only users with an active session (in any client of the realm) will be counted") @QueryParam("onlineOnly") Boolean onlineOnly
     ) {
-        return String.valueOf(
-                requestHandlerFactory
-                        .usersRequestHandler(authenticate())
-                        .getUserCount(
-                                search,
-                                attributes,
-                                onlineOnly
-                        )
-        );
+        return requestHandlerFactory
+                .usersRequestHandler(authenticate())
+                .getUserCount(
+                        search,
+                        attributes,
+                        onlineOnly
+                );
     }
 
     @GET
     @Path("resources")
     @Produces(MediaType.APPLICATION_JSON)
-    public Stream<ResourceRepresentation> getResources(
+    public Response getResources(
             @Parameter(description = "List of comma separated resource ids, in the format 'id1,id2'") @QueryParam("ids") String ids,
+            @Parameter(description = "The uuid of a user will return only resources shared with that user") @QueryParam("sharedWith") String sharedWith,
+            @Parameter(description = "Allows for filtering the resources by their name, by default a partial search is done, set 'exactName' for exact matching") @QueryParam("name") String name,
+            @Parameter(description = "Allows filtering the resources by the uri") @QueryParam("uri") String uri,
+            @Parameter(description = "The uuid of a user will only return resources owned by the user") @QueryParam("owner") String owner,
+            @Parameter(description = "If enabled AND the owner is set, only resources shared by the owner will be returned") @QueryParam("sharedOnly") Boolean sharedOnly,
+            @Parameter(description = "If set, only the ids of the resources are returned") @QueryParam("idsOnly") Boolean idsOnly,
+            @Parameter(description = "If set only resources that match the name-filter exactly will be returned") @QueryParam("exactName") Boolean exactName,
+            @Parameter(description = "Allows for filtering for types of resources") @QueryParam("type") String type,
             @Parameter(description = "Pagination offset") @QueryParam("first") Integer firstResult,
             @Parameter(description = "Maximum results size (defaults to 100)") @QueryParam("max") Integer maxResults
     ) {
@@ -93,6 +98,14 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
                 .resourceRequestHandler(authenticate())
                 .handleGetResourcesRequest(
                         commaListToCollection(ids),
+                        sharedWith,
+                        name,
+                        uri,
+                        owner,
+                        type,
+                        exactName,
+                        idsOnly,
+                        sharedOnly,
                         firstResult,
                         maxResults
                 );
@@ -125,32 +138,6 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
                         resourceId,
                         request.getScopes()
                 );
-    }
-
-    @GET
-    @Path("resources/shared-with/{user}")
-    @Produces(org.keycloak.utils.MediaType.APPLICATION_JSON)
-    public Response getResourcesSharedWithUser(
-            @Parameter(description = "The id of the user to find the resources shared with") @PathParam("user") String userId,
-            @Parameter(description = "Pagination offset") @QueryParam("first") Integer firstResult,
-            @Parameter(description = "Maximum results size (defaults to 100)") @QueryParam("max") Integer maxResults
-    ) {
-        return requestHandlerFactory
-                .sharedResourceRequestHandler(authenticate())
-                .handleSharedWithUserRequest(userId, firstResult, maxResults);
-    }
-
-    @GET
-    @Path("resources/shared-by/{user}")
-    @Produces(org.keycloak.utils.MediaType.APPLICATION_JSON)
-    public Response getResourcesSharedByUser(
-            @Parameter(description = "The id of the user to find the resources shared by") @PathParam("user") String userId,
-            @Parameter(description = "Pagination offset") @QueryParam("first") Integer firstResult,
-            @Parameter(description = "Maximum results size (defaults to 100)") @QueryParam("max") Integer maxResults
-    ) {
-        return requestHandlerFactory
-                .sharedResourceRequestHandler(authenticate())
-                .handleSharedByUserRequest(userId, firstResult, maxResults);
     }
 
     @GET

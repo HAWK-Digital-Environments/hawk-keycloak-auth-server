@@ -5,11 +5,12 @@ import com.hawk.keycloak.cacheBuster.CacheBusterRequestHandler;
 import com.hawk.keycloak.profiles.ProfileDataRequestHandler;
 import com.hawk.keycloak.profiles.ProfileStructureRequestHandler;
 import com.hawk.keycloak.resources.ResourceRequestHandler;
-import com.hawk.keycloak.resources.SharedResourceRequestHandler;
+import com.hawk.keycloak.resources.lookup.ResourceFinder;
 import com.hawk.keycloak.resources.lookup.ResourceUserFinder;
 import com.hawk.keycloak.resources.lookup.SharedResourceFinder;
 import com.hawk.keycloak.resources.service.ResourcePermissionSetter;
 import com.hawk.keycloak.roles.RolesRequestHandler;
+import com.hawk.keycloak.users.lookup.UserFinder;
 import com.hawk.keycloak.users.lookup.UserInfoGenerator;
 import com.hawk.keycloak.users.UsersRequestHandler;
 import com.hawk.keycloak.util.ConnectionInfoRequestHandler;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.store.PermissionTicketStore;
+import org.keycloak.authorization.store.ResourceStore;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resources.admin.AdminEventBuilder;
@@ -30,7 +32,21 @@ public class RequestHandlerFactory {
     }
 
     public UsersRequestHandler usersRequestHandler(HawkPermissionEvaluator auth) {
-        return new UsersRequestHandler(session, auth, userInfoGenerator());
+        return new UsersRequestHandler(
+                new UserFinder(
+                        session.users(),
+                        session.sessions(),
+                        session.getContext().getRealm()
+                ),
+                session,
+                auth,
+                new UserInfoGenerator(
+                        session,
+                        session.getContext().getClient(),
+                        session.getContext().getUri(),
+                        session.getContext().getConnection()
+                )
+        );
     }
 
     public ConnectionInfoRequestHandler connectionInfoRequestHandler(HawkPermissionEvaluator auth) {
@@ -55,39 +71,31 @@ public class RequestHandlerFactory {
                 session.getContext().getClient()
         );
         PermissionTicketStore ticketStore = authorizationProvider.getStoreFactory().getPermissionTicketStore();
+        ResourceStore resourceStore = authorizationProvider.getStoreFactory().getResourceStore();
         return new ResourceRequestHandler(
                 new ResourceUserFinder(ticketStore),
                 auth,
-                session,
-                authorizationProvider.getStoreFactory().getResourceStore(),
+                resourceStore,
                 resourceServer,
                 new ResourcePermissionSetter(
                         ticketStore,
                         resourceServer,
                         authorizationProvider.getStoreFactory().getScopeStore(),
+                        adminEventBuilder(auth),
+                        session.getContext().getUri()
+                ),
+                authorizationProvider,
+                new ResourceFinder(
                         session,
-                        adminEventBuilder(auth)
+                        resourceStore,
+                        authorizationProvider.getStoreFactory().getResourceServerStore().findByClient(
+                                session.getContext().getClient()
+                        ),
+                        new SharedResourceFinder(ticketStore)
                 ),
-                authorizationProvider
+                session.getContext().getRealm(),
+                session.users()
         );
-    }
-
-    public SharedResourceRequestHandler sharedResourceRequestHandler(HawkPermissionEvaluator auth) {
-        AuthorizationProvider provider = session.getProvider(AuthorizationProvider.class);
-        return new SharedResourceRequestHandler(
-                new SharedResourceFinder(
-                        provider.getStoreFactory().getPermissionTicketStore()
-                ),
-                auth,
-                session,
-                provider.getStoreFactory().getResourceServerStore().findByClient(
-                        session.getContext().getClient()
-                )
-        );
-    }
-
-    private UserInfoGenerator userInfoGenerator() {
-        return new UserInfoGenerator(session);
     }
 
     private AdminEventBuilder adminEventBuilder(HawkPermissionEvaluator auth) {

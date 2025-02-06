@@ -1,11 +1,11 @@
 package com.hawk.keycloak.resources.lookup;
 
+import com.hawk.keycloak.util.ResultWindow;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.authorization.model.PermissionTicket;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.store.PermissionTicketStore;
-import org.keycloak.models.Constants;
 import org.keycloak.models.UserModel;
 
 import java.util.*;
@@ -17,23 +17,30 @@ public class SharedResourceFinder {
     private final PermissionTicketStore ticketStore;
 
     public Stream<String> getSharedWithUser(ResourceServer resourceServer, UserModel user, Integer first, Integer max) {
-        first = first != null ? first : 0;
-        max = max != null ? max : Constants.DEFAULT_MAX_RESULTS;
-
         return toPermissions(
                 resourceServer,
-                ticketStore.findGrantedResources(user.getId(), null, first, max),
-                resource -> ticketStore.findGranted(resource.getResourceServer(), resource.getName(), user.getId())
-        ).stream();
+                ticketStore.findGrantedResources(
+                        user.getId(),
+                        null,
+                        ResultWindow.limitFirst(first),
+                        ResultWindow.limitMax(max)
+                ),
+                resource -> ticketStore.findGranted(
+                        resource.getResourceServer(),
+                        resource.getName(),
+                        user.getId()
+                )
+        );
     }
 
     public Stream<String> getSharedByUser(ResourceServer resourceServer, UserModel user, Integer first, Integer max) {
-        first = first != null ? first : 0;
-        max = max != null ? max : Constants.DEFAULT_MAX_RESULTS;
-
         return toPermissions(
                 resourceServer,
-                ticketStore.findGrantedOwnerResources(user.getId(), first, max),
+                ticketStore.findGrantedOwnerResources(
+                        user.getId(),
+                        ResultWindow.limitFirst(first),
+                        ResultWindow.limitMax(max)
+                ),
                 resource -> {
                     Map<PermissionTicket.FilterOption, String> filters = new EnumMap<>(PermissionTicket.FilterOption.class);
 
@@ -43,21 +50,32 @@ public class SharedResourceFinder {
 
                     return ticketStore.find(resource.getResourceServer(), filters, null, null);
                 }
-        ).stream();
+        );
     }
 
-    private Collection<String> toPermissions(ResourceServer resourceServer, List<Resource> resources, Function<Resource, List<PermissionTicket>> ticketFinder) {
-        Collection<String> permissions = new ArrayList<>();
-
-        for (org.keycloak.authorization.model.Resource resource : resources) {
-            for (PermissionTicket ticket : ticketFinder.apply(resource)) {
-                if(ticket.getResourceServer().equals(resourceServer)){
-                    permissions.add(ticket.getResource().getId());
-                    break;
-                }
-            }
+    public boolean isSharedByUser(UserModel user, Resource resource) {
+        if (resource == null || user == null) {
+            return false;
         }
 
-        return permissions;
+        return ticketStore.findByResource(resource.getResourceServer(), resource)
+                .stream()
+                .anyMatch(t -> t.isGranted() && t.getOwner().equals(user.getId()));
+    }
+
+    public boolean isSharedWithUser(UserModel user, Resource resource) {
+        if (resource == null || user == null) {
+            return false;
+        }
+
+        return !ticketStore.findGranted(resource.getResourceServer(), resource.getName(), user.getId()).isEmpty();
+    }
+
+    private Stream<String> toPermissions(ResourceServer resourceServer, List<Resource> resources, Function<Resource, List<PermissionTicket>> ticketFinder) {
+        return resources.stream()
+                .flatMap(resource -> ticketFinder.apply(resource).stream())
+                .filter(ticket -> ticket.getResourceServer().equals(resourceServer))
+                .map(ticket -> ticket.getResource().getId())
+                .distinct();
     }
 }

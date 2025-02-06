@@ -1,7 +1,7 @@
 package com.hawk.keycloak.users.lookup.query;
 
 import com.hawk.keycloak.users.lookup.OnlineUserIdResolver;
-import com.hawk.keycloak.users.lookup.UserSearcher;
+import com.hawk.keycloak.users.lookup.UserFinder;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -16,9 +16,9 @@ public class FindAny {
     final private int firstResult;
     final private int maxResults;
 
-    public Stream<UserModel> execute(UserSearcher searcher, OnlineUserIdResolver onlineUserIdResolver) {
+    public Stream<UserModel> execute(UserFinder finder, OnlineUserIdResolver onlineUserIdResolver) {
         if (!onlineOnly) {
-            return searcher.searchByAttributes(new HashMap<>(), realm, firstResult, maxResults);
+            return finder.findByAttributes(new HashMap<>(), realm, firstResult, maxResults);
         }
 
         String[] userIds = onlineUserIdResolver
@@ -29,6 +29,6 @@ public class FindAny {
             return Stream.empty();
         }
 
-        return searcher.searchByIds(userIds, realm, firstResult, maxResults);
+        return finder.findByIds(userIds, realm, firstResult, maxResults);
     }
 }

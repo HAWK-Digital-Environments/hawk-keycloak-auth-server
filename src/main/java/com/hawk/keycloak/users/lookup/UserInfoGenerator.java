@@ -1,6 +1,7 @@
 package com.hawk.keycloak.users.lookup;
 
 import jakarta.ws.rs.core.UriInfo;
+import lombok.RequiredArgsConstructor;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.models.*;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
@@ -16,18 +17,12 @@ import org.keycloak.sessions.RootAuthenticationSessionModel;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+@RequiredArgsConstructor
 public class UserInfoGenerator {
     private final KeycloakSession session;
     private final ClientModel client;
     private final UriInfo uriInfo;
     private final ClientConnection clientConnection;
-
-    public UserInfoGenerator(KeycloakSession session){
-        this.session = session;
-        this.client = session.getContext().getClient();
-        this.clientConnection = session.getContext().getConnection();
-        this.uriInfo = session.getContext().getUri();
-    }
 
     public Map<String, Object> getUserinfo(RealmModel realm, UserModel user) {
         return sessionAware(user, realm, null, (userSession, clientSessionCtx) -> {

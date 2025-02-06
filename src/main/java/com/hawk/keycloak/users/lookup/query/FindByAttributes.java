@@ -1,7 +1,7 @@
 package com.hawk.keycloak.users.lookup.query;
 
 import com.hawk.keycloak.users.lookup.OnlineUserIdResolver;
-import com.hawk.keycloak.users.lookup.UserSearcher;
+import com.hawk.keycloak.users.lookup.UserFinder;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -20,15 +20,15 @@ public class FindByAttributes {
     final private int firstResult;
     final private int maxResults;
 
-    public Stream<UserModel> execute(UserSearcher searcher, OnlineUserIdResolver onlineUserIdResolver) {
+    public Stream<UserModel> execute(UserFinder finder, OnlineUserIdResolver onlineUserIdResolver) {
         if (!onlineOnly) {
-            return searcher.searchByAttributes(attributes, realm, firstResult, maxResults);
+            return finder.findByAttributes(attributes, realm, firstResult, maxResults);
         }
 
-        return findOnlineUsersUntilMaxIsReached(searcher, onlineUserIdResolver);
+        return findOnlineUsersUntilMaxIsReached(finder, onlineUserIdResolver);
     }
 
-    private Stream<UserModel> findOnlineUsersUntilMaxIsReached(UserSearcher searcher, OnlineUserIdResolver onlineUserIdResolver) {
+    private Stream<UserModel> findOnlineUsersUntilMaxIsReached(UserFinder finder, OnlineUserIdResolver onlineUserIdResolver) {
         List<String> onlineUserIdsList = onlineUserIdResolver
                 .getOnlineUserIds(firstResult, maxResults, null)
                 .toList();
@@ -44,8 +44,8 @@ public class FindByAttributes {
         while (true) {
             AtomicBoolean streamHasAtLeastOneElement = new AtomicBoolean(false);
 
-            searcher
-                    .searchByAttributes(attributes, realm, offset, maxResults)
+            finder
+                    .findByAttributes(attributes, realm, offset, maxResults)
                     .forEach(u -> {
                         streamHasAtLeastOneElement.set(true);
                         if (onlineUserIdsList.contains(u.getId())) {

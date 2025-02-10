@@ -25,7 +25,10 @@ public class HawkResourceProviderFactory implements RealmResourceProviderFactory
     @Override
     public void postInit(KeycloakSessionFactory keycloakSessionFactory) {
         java.util.concurrent.Executors.newSingleThreadScheduledExecutor().schedule(
-                () -> new RoleRegistration(keycloakSessionFactory).register(),
+                () -> {
+                    new RoleRegistration(keycloakSessionFactory).register();
+                    new ClientScopeRegistration(keycloakSessionFactory).register();
+                },
                 1, // delay duration
                 java.util.concurrent.TimeUnit.SECONDS // delay unit
         );

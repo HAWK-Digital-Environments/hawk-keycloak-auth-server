@@ -16,14 +16,17 @@ To install the extension download the latest release from the [releases page](ht
 After the installation of the extension you need to restart the keycloak server.
 With the restart the extension will create a bunch of new roles you need to assign to your clients.
 To make your life easier, we have created a new role `hawk-client` that combines all the roles needed to access the new endpoints.
+The installer will also automatically add a new group of client scopes to your realm called `hawk-client` as well, that you can assign to your clients.
 
-Create a new client, or use an existing one, and assign the `hawk-client` role to the "Service account roles" of the client.
-This will give your client read-only access to the new endpoints.
-
-If you want to do management operations (like updating the profile structure or managing resource permissions),
-you need to assign the corresponding roles to your client: `hawk-manage-profile-structure`, `hawk-manage-profile-data`, `hawk-manage-resource-permissions`.
-
-As a last step, open your "Realm settings" you want to use the client with go to "Events" and add the "hawk-cache-buster" event listener.
+1. Create a new client, or use an existing one
+2. Open the client and navigate to the "Service account roles" tab
+3. Assign the `(realm-management) hawk-client` role to the client
+   - If you want to do management operations (like updating the profile structure or managing resource permissions),
+     you need to assign the corresponding roles to your client: `hawk-manage-profile-structure`, `hawk-manage-profile-data`, `hawk-manage-resource-permissions`.
+4. Open the "Client scopes" tab
+5. Add the `hawk-client` scope using the "Default" option.
+6. Open the "Realm settings" in your main menu
+7. Navigate to the "Events" tab and add the `hawk-cache-buster` event listener.
 
 ## What's in the box?
 

@@ -158,7 +158,7 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
     @GET
     @Path("roles/{role}/members")
     @Produces(MediaType.APPLICATION_JSON)
-    public Stream<Map<String, String>> getRoleMembers(
+    public Stream<String> getRoleMembers(
             @Parameter(description = "The id of the role to find the members of") @PathParam("role") String roleId,
             @Parameter(description = "Pagination offset") @QueryParam("first") Integer firstResult,
             @Parameter(description = "Maximum results size (defaults to 100)") @QueryParam("max") Integer maxResults

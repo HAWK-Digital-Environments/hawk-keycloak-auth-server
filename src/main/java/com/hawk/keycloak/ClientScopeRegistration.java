@@ -79,6 +79,7 @@ public class ClientScopeRegistration {
                 false
         );
         groupMapper.getConfig().put(OIDCAttributeMapperHelper.INCLUDE_IN_USERINFO, "true");
+        groupMapper.getConfig().put("full.path", "true");
         scope.addProtocolMapper(groupMapper);
     }
 }

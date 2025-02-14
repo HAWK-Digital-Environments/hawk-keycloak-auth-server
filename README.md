@@ -157,7 +157,19 @@ The body of the request should be a [UPConfig](https://www.keycloak.org/docs-api
 
 Required roles: `hawk-manage-profile-structure`
 
-#### POST User Profile Data
+#### GET User Profile Data
+`/realms/{realm}/hawk/profile/{userId}`
+
+Returns the profile data of a user. This is a custom endpoint that allows the client to choose if the
+profile should be returned as the user itself or as an admin. The userProfileMetadata is ALWAYS returned,
+otherwise the endpoint behaves exactly like: `/admin/realms/{realm}/users/{userId}`
+
+Supported query parameters:
+* **mode** - user|admin - If set to "admin" the update will be done as an admin, otherwise as the user itself
+
+Required roles: `view-users`
+
+#### PUT User Profile Data
 `/realms/{realm}/hawk/profile/{userId}`
 
 Allows your client to update the profile data of a user. This is a custom endpoint that
@@ -165,6 +177,9 @@ allows clients to update the profile without having global write access to the u
 using impersonation to update the user.
 
 The body of the request should be a [UserRepresentation](https://www.keycloak.org/docs-api/latest/rest-api/index.html#UserRepresentation)
+
+Supported query parameters:
+* **mode** - user|admin - If set to "admin" the update will be done as an admin, otherwise as the user itself
 
 Required roles: `hawk-manage-profile-data`
 

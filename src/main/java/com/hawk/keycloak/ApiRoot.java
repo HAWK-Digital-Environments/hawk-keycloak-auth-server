@@ -1,6 +1,7 @@
 package com.hawk.keycloak;
 
 import com.hawk.keycloak.auth.HawkPermissionEvaluator;
+import com.hawk.keycloak.profiles.ProfileMode;
 import com.hawk.keycloak.resources.model.UserResourcePermission;
 import com.hawk.keycloak.resources.model.UserResourcePermissionsRequest;
 import com.hawk.keycloak.util.model.ConnectionInfo;
@@ -15,14 +16,14 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.protocol.oidc.TokenManager;
-import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.representations.idm.AbstractUserRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.userprofile.config.UPConfig;
 import org.keycloak.services.resources.admin.AdminAuth;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
@@ -191,17 +192,33 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
         return requestHandlerFactory.profileStructureRequestHandler(authenticate()).handleUpdateStructure(config);
     }
 
+    @GET
+    @Path("profile/{user}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public AbstractUserRepresentation getUserProfile(
+            @Parameter(description = "The id of the user to get the profile for") @PathParam("user") String userId,
+            @Parameter(description = "Defines the requesting role. Can be 'user' (default) to get the profile in the user view or 'admin' to get the profile in the admin view") @QueryParam("mode") String mode
+    ) {
+        return requestHandlerFactory.profileDataRequestHandler(authenticate())
+                .handleProfileRequest(
+                        session.users().getUserById(session.getContext().getRealm(), userId),
+                        ProfileMode.fromString(mode)
+                );
+    }
+
     @PUT
     @Path("profile/{user}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateUserProfile(
             @Parameter(description = "The id of the user to update the profile for") @PathParam("user") String userId,
+            @Parameter(description = "Defines the requesting role. Can be 'user' (default) to update the profile as the user, or 'admin' to update the profile as admin") @QueryParam("mode") String mode,
             UserRepresentation rep
     ) {
         return requestHandlerFactory.profileDataRequestHandler(authenticate())
                 .handleProfileUpdateRequest(
                         session.users().getUserById(session.getContext().getRealm(), userId),
+                        ProfileMode.fromString(mode),
                         rep
                 );
     }

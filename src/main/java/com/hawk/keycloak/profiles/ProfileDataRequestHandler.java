@@ -9,8 +9,9 @@ import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.UserModel;
-import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.representations.idm.AbstractUserRepresentation;
 import org.keycloak.representations.idm.ErrorRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.services.ErrorResponse;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.storage.ReadOnlyException;
@@ -25,7 +26,17 @@ public class ProfileDataRequestHandler {
     private final HawkPermissionEvaluator auth;
     private final EventBuilder event;
 
-    public Response handleProfileUpdateRequest(UserModel user, UserRepresentation rep) {
+    public AbstractUserRepresentation handleProfileRequest(UserModel user, ProfileMode mode) {
+        auth.admin().users().requireView();
+
+        if(user == null){
+            throw new NotFoundException("User not found");
+        }
+
+        return getProfile(user, mode, null).toRepresentation();
+    }
+
+    public Response handleProfileUpdateRequest(UserModel user, ProfileMode mode, UserRepresentation rep) {
         auth.requireManageProfileData();
 
         if(user == null){
@@ -34,11 +45,9 @@ public class ProfileDataRequestHandler {
 
         event.event(EventType.UPDATE_PROFILE).detail(Details.CONTEXT, UserProfileContext.ACCOUNT.name());
 
-        UserProfileProvider profileProvider = session.getProvider(UserProfileProvider.class);
-        UserProfile profile = profileProvider.create(UserProfileContext.ACCOUNT, rep.getRawAttributes(), user);
+        UserProfile profile = getProfile(user, mode, rep);
 
         try {
-
             profile.update(new EventAuditingAttributeChangeListener(profile, event));
 
             event.success();
@@ -53,6 +62,17 @@ public class ProfileDataRequestHandler {
         } catch (ReadOnlyException e) {
             throw ErrorResponse.error(Messages.READ_ONLY_USER, Response.Status.BAD_REQUEST);
         }
+    }
+
+    private UserProfile getProfile(UserModel user, ProfileMode mode, UserRepresentation rep) {
+        UserProfileContext context = mode == ProfileMode.USER ? UserProfileContext.ACCOUNT : UserProfileContext.USER_API;
+        UserProfileProvider profileProvider = session.getProvider(UserProfileProvider.class);
+
+        if(rep == null){
+            return profileProvider.create(context, user);
+        }
+
+        return profileProvider.create(context, rep.getRawAttributes(), user);
     }
 
     private String[] validationErrorParamsToString(Object[] messageParameters, Attributes userProfileAttributes) {

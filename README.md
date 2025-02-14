@@ -184,13 +184,14 @@ Required roles: `hawk-view-cache-buster`
 `/realms/{realm}/hawk/connection-info`
 
 This endpoint returns information about the connection to the keycloak server required
-for a smooth client experience. 
+for a smooth client experience. Note, to use this endpoint the requesting client MUST have a service account.
 
 The response contains the following fields:
 * keycloakVersion - The version of the keycloak server (Used for compatibility checks on the client side)
 * extensionVersion - The version of the hawk keycloak extension
 * clientId - The client id of the client that requested the endpoint
 * clientUuid - The uuid of the client that requested the endpoint
+* clientServiceAccountUuid - The uuid of the service account of the client that requested the endpoint
 
 Required roles `hawk-client`
 

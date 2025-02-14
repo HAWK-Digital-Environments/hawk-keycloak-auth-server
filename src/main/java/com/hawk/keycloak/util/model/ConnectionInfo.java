@@ -10,4 +10,5 @@ public class ConnectionInfo {
     private final String extensionVersion;
     private final String clientId;
     private final String clientUuid;
+    private final String clientServiceAccountUuid;
 }

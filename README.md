@@ -183,6 +183,19 @@ Supported query parameters:
 
 Required roles: `hawk-manage-profile-data`
 
+#### PATCH User Profile Data
+`/realms/{realm}/hawk/profile/{userId}`
+
+This endpoint works similar to the `PUT` variant, but also accepts partial updates.
+Only the fields that are provided in the request body will be validated and updated.
+
+The body of the request should be a [UserRepresentation](https://www.keycloak.org/docs-api/latest/rest-api/index.html#UserRepresentation)
+
+Supported query parameters:
+* **mode** - user|admin - If set to "admin" the update will be done as an admin, otherwise as the user itself
+
+Required roles: `hawk-manage-profile-data`
+
 #### GET Cache Buster
 `/realms/{realm}/hawk/cache-buster`
 

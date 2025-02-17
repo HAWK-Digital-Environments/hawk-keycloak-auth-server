@@ -164,7 +164,6 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
             @Parameter(description = "Pagination offset") @QueryParam("first") Integer firstResult,
             @Parameter(description = "Maximum results size (defaults to 100)") @QueryParam("max") Integer maxResults
     ) {
-
         return requestHandlerFactory
                 .rolesRequestHandler(authenticate())
                 .handleRoleMembersRequest(
@@ -210,13 +209,30 @@ public class ApiRoot extends org.keycloak.services.resources.admin.AdminRoot {
     @Path("profile/{user}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUserProfile(
+    public Response putUserProfile(
             @Parameter(description = "The id of the user to update the profile for") @PathParam("user") String userId,
             @Parameter(description = "Defines the requesting role. Can be 'user' (default) to update the profile as the user, or 'admin' to update the profile as admin") @QueryParam("mode") String mode,
             UserRepresentation rep
     ) {
         return requestHandlerFactory.profileDataRequestHandler(authenticate())
-                .handleProfileUpdateRequest(
+                .handleProfilePutRequest(
+                        session.users().getUserById(session.getContext().getRealm(), userId),
+                        ProfileMode.fromString(mode),
+                        rep
+                );
+    }
+
+    @PATCH
+    @Path("profile/{user}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response patchUserProfile(
+            @Parameter(description = "The id of the user to update the profile for") @PathParam("user") String userId,
+            @Parameter(description = "Defines the requesting role. Can be 'user' (default) to update the profile as the user, or 'admin' to update the profile as admin") @QueryParam("mode") String mode,
+            UserRepresentation rep
+    ) {
+        return requestHandlerFactory.profileDataRequestHandler(authenticate())
+                .handleProfilePatchRequest(
                         session.users().getUserById(session.getContext().getRealm(), userId),
                         ProfileMode.fromString(mode),
                         rep

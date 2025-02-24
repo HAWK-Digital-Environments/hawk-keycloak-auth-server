@@ -45,7 +45,9 @@ public class ResourceUserFinder {
                 resource.addPermission(ticket.getRequester(), user = new UserResourcePermission(ticket.getRequester()));
             }
 
-            user.addScope(ticket.getScope().getName());
+            if(ticket.getScope() != null){
+                user.addScope(ticket.getScope().getName());
+            }
         }
 
         return permissions.values();

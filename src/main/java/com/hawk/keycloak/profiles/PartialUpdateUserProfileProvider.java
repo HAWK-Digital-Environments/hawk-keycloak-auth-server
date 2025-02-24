@@ -67,7 +67,7 @@ public class PartialUpdateUserProfileProvider extends DeclarativeUserProfileProv
                     }
                     break;
                 default:
-                    if (!partialRep.getAttributes().containsKey(value.getName())) {
+                    if (partialRep.getAttributes() != null && !partialRep.getAttributes().containsKey(value.getName())) {
                         value.addWriteCondition(context1 -> false);
                     }
                     break;

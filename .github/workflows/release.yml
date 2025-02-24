@@ -21,6 +21,7 @@ jobs:
         id: changelog
         with:
           output-file: "false"
+          skip-version-file: "true"
           github-token: ${{ secrets.github_token }}
 
       - name: Make build script executable

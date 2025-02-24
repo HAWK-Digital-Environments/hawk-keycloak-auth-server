@@ -9,7 +9,6 @@ import org.keycloak.authorization.model.Scope;
 import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.ScopeStore;
 import org.keycloak.events.admin.OperationType;
-import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakUriInfo;
 import org.keycloak.models.UserModel;
 import org.keycloak.services.resources.admin.AdminEventBuilder;
@@ -38,6 +37,13 @@ public class ResourcePermissionSetter {
         }
 
         List<String> knownScopesOfResource = resource.getScopes().stream().map(Scope::getName).toList();
+
+        for (String scope : scopes) {
+            if(!knownScopesOfResource.contains(scope)){
+                throw new BadRequestException("The scope \"" + scope + "\" is not allowed for the resource");
+            }
+        }
+
         List<PermissionTicket> tickets = findTickets(resource, user);
 
         boolean triggerEvent = false;
@@ -57,9 +63,6 @@ public class ResourcePermissionSetter {
 
                 if(scope == null){
                     throw new BadRequestException("The scope \"" + scopeName + "\" does not exist");
-                }
-                if(!knownScopesOfResource.contains(scope.getName())){
-                    throw new BadRequestException("The scope \"" + scopeName + "\" is not allowed for the resource");
                 }
 
                 Iterator<PermissionTicket> ticketIterator = tickets.iterator();

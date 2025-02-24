@@ -20,7 +20,7 @@ jobs:
       - uses: TriPSs/conventional-changelog-action@v5
         id: changelog
         with:
-          output-file: "false"
+#          output-file: "false"
           skip-version-file: "true"
           github-token: ${{ secrets.github_token }}
 

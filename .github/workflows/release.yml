@@ -21,7 +21,6 @@ jobs:
         id: changelog
         with:
           output-file: "false"
-          skip-version-file: "true"
           github-token: ${{ secrets.github_token }}
           version-file: ".github/version.json"
 

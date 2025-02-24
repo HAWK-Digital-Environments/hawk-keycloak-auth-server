@@ -1,7 +1,8 @@
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
   build-and-release:
@@ -13,18 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: TriPSs/conventional-changelog-action@v5
+        id: changelog
+        with:
+          output-file: "false"
+          github-token: ${{ secrets.github_token }}
+
       - name: Make build script executable
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
         run: chmod +x ./build.sh
 
       - name: Run build script
-        run: ./build.sh
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        run: ./build.sh ${{ steps.changelog.outputs.version }}
 
       - name: Create Release
         id: create_release
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
         uses: softprops/action-gh-release@v1
         with:
           files: ./target/hawk-auth-server-extension.jar
-          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          name: ${{ steps.changelog.outputs.tag }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
